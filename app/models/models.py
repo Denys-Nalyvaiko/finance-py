@@ -27,10 +27,12 @@ class MaterialPurchase(Base):
     id = Column(Integer, primary_key=True)
     purchase_date = Column(Date)
     document_number = Column(String)
-    material_name = Column(String)
+    material_name = Column(String, ForeignKey("storage.material_name"))
     quantity = Column(Integer)
     price = Column(Float)
     total_price = Column(Float)
+
+    storage = relationship("Storage", back_populates="purchase")
 
 
 class MaterialExpenses(Base):
@@ -38,12 +40,13 @@ class MaterialExpenses(Base):
 
     id = Column(Integer, primary_key=True)
     product_id = Column(String)
-    product_name = Column(String)
-    material_name = Column(String, ForeignKey("material_purchase.material_name"))
+    product_name = Column(String, ForeignKey("sales.product_id"))
+    material_name = Column(String, ForeignKey("storage.material_name"))
     quantity = Column(Integer)
     total_material_price = Column(Float)
 
-    purchase = relationship("MaterialPurchase", foreign_keys=[material_name])
+    purchase = relationship("Storage", back_populates="expenses")
+    sales = relationship("Sales", back_populates="expenses_entry")
 
 
 class Sales(Base):
@@ -51,7 +54,7 @@ class Sales(Base):
 
     id = Column(Integer, primary_key=True)
     document_number = Column(String)
-    product_id = Column(String)
+    product_id = Column(String, unique=True)
     product_name = Column(String)
     quantity = Column(Integer)
     expenses = Column(Float)
@@ -59,10 +62,17 @@ class Sales(Base):
     income = Column(Float)
     net_profit = Column(Float)
 
+    expenses_entry = relationship("MaterialExpenses", back_populates="sales")
+
 
 class Storage(Base):
     __tablename__ = "storage"
 
     id = Column(Integer, primary_key=True)
-    material_name = Column(String)
-    balance = Column(Integer)
+    material_name = Column(String, unique=True)
+    total_quantity = Column(Integer)
+    avg_price = Column(Float)
+    remain = Column(Integer)
+
+    purchase = relationship("MaterialPurchase", back_populates="storage")
+    expenses = relationship("MaterialExpenses", back_populates="purchase")
